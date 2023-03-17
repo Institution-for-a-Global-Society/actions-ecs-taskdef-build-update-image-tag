@@ -13,6 +13,8 @@ inputs:
     require: true
   deploy_ssh_key:
     default: ""
+  task_definition_repo:
+    require: true
   task_definition_repo_ref:
     require: true
   task_definition_file:
@@ -72,13 +74,14 @@ runs:
         # Docker push
         docker tag $GITSHA_IMAGE_URL $TARGET_IMAGE_URL
         docker push $TARGET_IMAGE_URL
+
     - name: Checkout task definition repository
       uses: actions/checkout@v3
       with:
-        repository: ${{ github.repository_owner }}/mint-ecs-task-definitions
+        repository: ${{ github.repository_owner }}/${{ inputs.task_definition_repo }}
         ref: ${{ inputs.task_definition_repo_ref }}
         token: ${{ inputs.git_personal_access_token }}
-        path: mint-ecs-task-definitions
+        path: task-definitions
 
     - name: Update task definition
       uses: nick-fields/retry@v2
@@ -88,7 +91,7 @@ runs:
         retry_on: error
         shell: bash
         command: |
-          cd mint-ecs-task-definitions
+          cd task-definitions
           git config --local user.email ${{ inputs.git_user_email }}
           git config --local user.name ${{ inputs.git_user_name }}
           git config pull.rebase false
